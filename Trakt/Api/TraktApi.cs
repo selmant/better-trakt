@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -49,6 +50,7 @@ public class TraktApi
     private readonly IUserDataManager _userDataManager;
     private readonly IUserManager _userManager;
     private readonly JsonSerializerOptions _jsonOptions = JsonDefaults.Options;
+    private static readonly ConcurrentDictionary<Guid, SemaphoreSlim> RefreshLocks = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TraktApi"/> class.
@@ -1019,44 +1021,60 @@ public class TraktApi
     /// <returns>Task.</returns>
     public async Task RefreshUserAccessToken(TraktUser traktUser)
     {
-        if (string.IsNullOrWhiteSpace(traktUser.RefreshToken))
-        {
-            _logger.LogError("Tried to reauthenticate with Trakt, but no refreshToken was available");
-            return;
-        }
-
-        var data = new TraktUserRefreshTokenRequest
-        {
-            ClientId = TraktUris.ClientId,
-            ClientSecret = TraktUris.ClientSecret,
-            RedirectUri = "urn:ietf:wg:oauth:2.0:oob",
-            RefreshToken = traktUser.RefreshToken,
-            GrantType = "refresh_token"
-        };
-
-        TraktUserAccessToken userAccessToken;
+        var refreshLock = RefreshLocks.GetOrAdd(traktUser.LinkedMbUserId, _ => new SemaphoreSlim(1, 1));
+        await refreshLock.WaitAsync().ConfigureAwait(false);
         try
         {
-            using var response = await PostToTrakt(TraktUris.AccessToken, data).ConfigureAwait(false);
-            response.EnsureSuccessStatusCode();
-#pragma warning disable CA2007
-            await using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
-#pragma warning restore CA2007
-            userAccessToken = await JsonSerializer.DeserializeAsync<TraktUserAccessToken>(stream, _jsonOptions).ConfigureAwait(false);
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogError(ex, "An error occurred during token refresh");
-            return;
-        }
+            // A caller that waited behind another refresh reuses the rotated token pair.
+            if (!string.IsNullOrWhiteSpace(traktUser.AccessToken)
+                && DateTimeOffset.Now <= traktUser.AccessTokenExpiration)
+            {
+                return;
+            }
 
-        if (userAccessToken != null)
+            if (string.IsNullOrWhiteSpace(traktUser.RefreshToken))
+            {
+                _logger.LogError("Tried to reauthenticate with Trakt, but no refreshToken was available");
+                return;
+            }
+
+            var data = new TraktUserRefreshTokenRequest
+            {
+                ClientId = TraktUris.ClientId,
+                ClientSecret = TraktUris.ClientSecret,
+                RedirectUri = "urn:ietf:wg:oauth:2.0:oob",
+                RefreshToken = traktUser.RefreshToken,
+                GrantType = "refresh_token"
+            };
+
+            TraktUserAccessToken userAccessToken;
+            try
+            {
+                using var response = await PostToTrakt(TraktUris.AccessToken, data).ConfigureAwait(false);
+                response.EnsureSuccessStatusCode();
+#pragma warning disable CA2007
+                await using var stream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+#pragma warning restore CA2007
+                userAccessToken = await JsonSerializer.DeserializeAsync<TraktUserAccessToken>(stream, _jsonOptions).ConfigureAwait(false);
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "An error occurred during token refresh");
+                return;
+            }
+
+            if (userAccessToken != null)
+            {
+                traktUser.AccessToken = userAccessToken.AccessToken;
+                traktUser.RefreshToken = userAccessToken.RefreshToken;
+                traktUser.AccessTokenExpiration = DateTime.Now.AddSeconds(userAccessToken.ExpirationWithBuffer);
+                Plugin.Instance.SaveConfiguration();
+                _logger.LogInformation("Successfully refreshed the access token for user {UserId}", traktUser.LinkedMbUserId);
+            }
+        }
+        finally
         {
-            traktUser.AccessToken = userAccessToken.AccessToken;
-            traktUser.RefreshToken = userAccessToken.RefreshToken;
-            traktUser.AccessTokenExpiration = DateTime.Now.AddSeconds(userAccessToken.ExpirationWithBuffer);
-            Plugin.Instance.SaveConfiguration();
-            _logger.LogInformation("Successfully refreshed the access token for user {UserId}", traktUser.LinkedMbUserId);
+            refreshLock.Release();
         }
     }
 
