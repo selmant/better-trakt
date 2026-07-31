@@ -8,6 +8,14 @@
     "owner": "selmant",
     "versions": [
       {
+        "changelog": "Serializes per-user Trakt refreshes to protect rotating refresh tokens.",
+        "checksum": "d30f87355693bf0e976f1c9d904159c1",
+        "sourceUrl": "https://github.com/selmant/better-trakt/releases/download/v1000.2026.731.3/better-trakt_1000.2026.731.3.zip",
+        "targetAbi": "10.11.9.0",
+        "timestamp": "2026-07-31T17:01:29Z",
+        "version": "1000.2026.731.3"
+      },
+      {
         "changelog": "Adds the public Trakt client ID to the administrator-controlled Foreseer token bridge. No Trakt client secret or refresh token is exposed.",
         "checksum": "e7573bc34e0dd0ff8c1ee1adadcf0b1e",
         "sourceUrl": "https://github.com/selmant/better-trakt/releases/download/v1000.2026.731.2/better-trakt_1000.2026.731.2.zip",
