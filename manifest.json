@@ -8,6 +8,14 @@
     "owner": "selmant",
     "versions": [
       {
+        "changelog": "Adds the public Trakt client ID to the administrator-controlled Foreseer token bridge. No Trakt client secret or refresh token is exposed.",
+        "checksum": "e7573bc34e0dd0ff8c1ee1adadcf0b1e",
+        "sourceUrl": "https://github.com/selmant/better-trakt/releases/download/v1000.2026.731.2/better-trakt_1000.2026.731.2.zip",
+        "targetAbi": "10.11.9.0",
+        "timestamp": "2026-07-31T16:43:51Z",
+        "version": "1000.2026.731.2"
+      },
+      {
         "changelog": "First Better Trakt release.\n\n- Drop-in replacement for the official Jellyfin Trakt plugin.\n- Preserves the existing plugin GUID, Trakt.dll assembly, /Trakt routes, and Trakt.xml configuration.\n- Adds per-user Trakt authorization and preference self-service.\n- Adds optional administrator-controlled access-token export for Foreseer and other integrations.\n- Includes current upstream Jellyfin Trakt fixes for Jellyfin 10.11.\n\nDo not run Better Trakt and the official Trakt plugin together.",
         "checksum": "069053470040005973d0c1c7fbd65fc9",
         "sourceUrl": "https://github.com/selmant/better-trakt/releases/download/v1000.2026.731.1/better-trakt_1000.2026.731.1.zip",
