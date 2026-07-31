@@ -1,7 +1,7 @@
 <Project>
     <PropertyGroup>
-        <Version>1000.2026.731.1</Version>
-        <AssemblyVersion>1000.2026.731.1</AssemblyVersion>
-        <FileVersion>1000.2026.731.1</FileVersion>
+        <Version>1000.2026.731.2</Version>
+        <AssemblyVersion>1000.2026.731.2</AssemblyVersion>
+        <FileVersion>1000.2026.731.2</FileVersion>
     </PropertyGroup>
 </Project>

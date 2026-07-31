@@ -238,7 +238,8 @@ public class TraktController : ControllerBase
         return new TraktUserTokenDto
         {
             AccessToken = traktUser.AccessToken,
-            AccessTokenExpiration = traktUser.AccessTokenExpiration
+            AccessTokenExpiration = traktUser.AccessTokenExpiration,
+            ClientId = TraktUris.ClientId
         };
     }
 
