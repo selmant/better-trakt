@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "category": "General",
+    "description": "An unofficial, drop-in Trakt plugin fork with per-user self-service and optional, administrator-controlled integration for other applications.\n",
+    "guid": "4fe3201e-d6ae-4f2e-8917-e12bda571281",
+    "name": "Better Trakt",
+    "overview": "Trakt sync with user self-service and Foreseer integration",
+    "owner": "selmant",
+    "versions": [
+      {
+        "changelog": "First Better Trakt release.\n\n- Drop-in replacement for the official Jellyfin Trakt plugin.\n- Preserves the existing plugin GUID, Trakt.dll assembly, /Trakt routes, and Trakt.xml configuration.\n- Adds per-user Trakt authorization and preference self-service.\n- Adds optional administrator-controlled access-token export for Foreseer and other integrations.\n- Includes current upstream Jellyfin Trakt fixes for Jellyfin 10.11.\n\nDo not run Better Trakt and the official Trakt plugin together.",
+        "checksum": "069053470040005973d0c1c7fbd65fc9",
+        "sourceUrl": "https://github.com/selmant/better-trakt/releases/download/v1000.2026.731.1/better-trakt_1000.2026.731.1.zip",
+        "targetAbi": "10.11.9.0",
+        "timestamp": "2026-07-31T16:24:26Z",
+        "version": "1000.2026.731.1"
+      }
+    ]
+  }
+]
