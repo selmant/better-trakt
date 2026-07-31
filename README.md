@@ -1,24 +1,26 @@
-<h1 align="center">Trakt for Jellyfin Plugin</h1>
-<h3 align="center">Part of the <a href="https://jellyfin.org">Jellyfin Project</a></h3>
+<h1 align="center">Better Trakt</h1>
+<h3 align="center">An unofficial, drop-in Trakt plugin fork for Jellyfin</h3>
 
 <p align="center">
-<img alt="Plugin Banner" src="https://raw.githubusercontent.com/jellyfin/jellyfin-ux/master/plugins/SVG/jellyfin-plugin-trakt.svg?sanitize=true"/>
+<img alt="Better Trakt logo" width="180" src="https://raw.githubusercontent.com/selmant/better-trakt/better-trakt/art/better-trakt.svg"/>
 <br/>
 <br/>
-<a href="https://github.com/jellyfin/jellyfin-plugin-trakt/actions?query=workflow%3A%22Test+Build+Plugin%22">
-<img alt="GitHub Workflow Status" src="https://img.shields.io/github/workflow/status/jellyfin/jellyfin-plugin-trakt/Test%20Build%20Plugin.svg">
+<a href="https://github.com/selmant/better-trakt/actions/workflows/build.yaml">
+<img alt="Build status" src="https://github.com/selmant/better-trakt/actions/workflows/build.yaml/badge.svg?branch=better-trakt">
 </a>
-<a href="https://github.com/jellyfin/jellyfin-plugin-trakt">
-<img alt="MIT License" src="https://img.shields.io/github/license/jellyfin/jellyfin-plugin-trakt.svg"/>
+<a href="https://github.com/selmant/better-trakt">
+<img alt="MIT License" src="https://img.shields.io/github/license/selmant/better-trakt.svg"/>
 </a>
-<a href="https://github.com/jellyfin/jellyfin-plugin-trakt/releases">
-<img alt="Current Release" src="https://img.shields.io/github/release/jellyfin/jellyfin-plugin-trakt.svg"/>
+<a href="https://github.com/selmant/better-trakt/releases">
+<img alt="Current release" src="https://img.shields.io/github/v/release/selmant/better-trakt.svg"/>
 </a>
 </p>
 
 ## About
 
-Available for install through the plugin catalog, Trakt for Jellyfin allows you to synchronize your watch states with ease.
+Better Trakt synchronizes Jellyfin watch states with Trakt and adds per-user self-service plus an optional, administrator-controlled integration surface for applications such as Foreseer.
+
+This project is independently maintained and is not an official Jellyfin or Trakt project. It keeps the upstream plugin GUID, assembly name, routes, and `Trakt.xml` configuration file so it replaces the official Trakt plugin without losing existing users or authorization tokens. Do not run Better Trakt and the official Trakt plugin together.
 
 ## User self-service
 
@@ -34,7 +36,7 @@ Share or bookmark:
 
 Example: `https://jellyfin.example.com/Trakt/SelfService`
 
-The same link is shown (with a copy button) on **Dashboard → Plugins → Trakt**. Users must already be logged into Jellyfin in that browser (the page reads the session from `localStorage` and calls the `/Trakt/me*` APIs).
+The same link is shown (with a copy button) on **Dashboard → Plugins → Better Trakt**. Users must already be logged into Jellyfin in that browser (the page reads the session from `localStorage` and calls the `/Trakt/me*` APIs).
 
 Do **not** use jellyfin-web `#/configurationpage` for this UI — that route is restricted to administrators and sends normal users home.
 
@@ -46,14 +48,14 @@ Stock jellyfin-web does not list plugin pages in the sidebar for non-admin users
 ```json
 "menuLinks": [
   {
-    "name": "Trakt",
+    "name": "Better Trakt",
     "icon": "tv",
     "url": "/Trakt/SelfService"
   }
 ]
 ```
 
-The plugin never modifies `config.json`. Admins can still configure any user from **Dashboard → Plugins → Trakt**.
+The plugin never modifies `config.json`. Admins can still configure any user from **Dashboard → Plugins → Better Trakt**.
 
 ### Self-service API
 
@@ -78,37 +80,45 @@ Routes under `/Trakt/Users/{userGuid}/...` allow the **same user** or an **admin
 `GET /Trakt/me/Token` returns `{ "accessToken": "...", "accessTokenExpiration": "..." }` only when:
 
 1. The user has linked Trakt, and
-2. An **administrator** enabled **Allow other apps to read this user's Trakt access token** for that user on **Dashboard → Plugins → Trakt**.
+2. An **administrator** enabled **Allow other apps to read this user's Trakt access token** for that user on **Dashboard → Plugins → Better Trakt**.
 
 This is an admin-only policy (users cannot enable it via self-service). Disabled by default per user.
 Admins can enable **Default: allow token export for new users** (server-wide) so newly created Trakt configs inherit `AllowExternalTokenAccess = true` (existing users are unchanged; override per user as needed).
 The refresh token is never returned; apps should call this endpoint again when the access token is near expiry (Jellyfin refreshes it server-side).
 
-## Installation
+## Installation and updates
 
-[See the official documentation for install instructions](https://jellyfin.org/docs/general/server/plugins/index.html#installing).
+Add this repository in **Dashboard → Plugins → Repositories**:
+
+```text
+https://raw.githubusercontent.com/selmant/better-trakt/manifest-release/manifest.json
+```
+
+The fork uses a `1000.x` version namespace, so Jellyfin treats it as newer than the official plugin with the same GUID. Install **Better Trakt** from the catalog and restart Jellyfin. Existing `Trakt.xml` configuration and linked accounts are retained.
+
+Future releases are delivered by Jellyfin's normal plugin update task through the same repository. To return to the official plugin, uninstall Better Trakt, restart Jellyfin, and install Trakt from the official catalog. Do not delete `Trakt.xml` during that process.
 
 ## Build
 
-1. To build this plugin you will need [.Net 9.x](https://dotnet.microsoft.com/download/dotnet/9.0).
+1. To build this plugin you will need [.NET 9.x](https://dotnet.microsoft.com/download/dotnet/9.0).
 
 2. Build plugin with following command
   ```
   dotnet publish --configuration Release --output bin
   ```
 
-3. Place the dll-file in the `plugins/trakt` folder (you might need to create the folders) of your JF install
+3. Place `Trakt.dll` in a plugin directory and restart Jellyfin.
 
 ## Releasing
 
-To release the plugin we recommend [JPRM](https://github.com/oddstr13/jellyfin-plugin-repository-manager) that will build and package the plugin.
-For additional context and for how to add the packaged plugin zip to a plugin manifest see the [JPRM documentation](https://github.com/oddstr13/jellyfin-plugin-repository-manager) for more info.
+Update the same four-part version in `Directory.Build.props` and `build.yaml`, then create a GitHub release with the matching `vVERSION` tag. The publish workflow packages the plugin with [JPRM](https://github.com/oddstr13/jellyfin-plugin-repository-manager), attaches checksums, and regenerates `manifest-release/manifest.json` automatically.
+
+The first component remains `1000`. The remaining components identify the year, month/day, and revision, for example `1000.2026.731.2`.
 
 ## Contributing
 
-We welcome all contributions and pull requests! If you have a larger feature in mind please open an issue so we can discuss the implementation before you start.
-In general refer to our [contributing guidelines](https://github.com/jellyfin/.github/blob/master/CONTRIBUTING.md) for further information.
+Changes from [`jellyfin/jellyfin-plugin-trakt`](https://github.com/jellyfin/jellyfin-plugin-trakt) are regularly merged into this fork. Bug reports for Better Trakt should be opened here rather than in Jellyfin's official plugin repository.
 
 ## Licence
 
-This plugins code and packages are distributed under the MIT License. See [LICENSE](./LICENSE.md) for more information.
+The source retains the upstream MIT License. See [LICENSE](./LICENSE.md) for more information.

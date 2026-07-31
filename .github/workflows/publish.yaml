@@ -1,18 +1,78 @@
-name: '🚀 Publish Plugin'
+name: Publish Better Trakt
 
 on:
   release:
     types:
       - released
-  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  call:
-    uses: jellyfin/jellyfin-meta-plugins/.github/workflows/publish.yaml@bd147a5ba80bc60d6c94f8842afe716f6a2f626a # master
-    with:
-      version: ${{ github.event.release.tag_name }}
-      is-unstable: ${{ github.event.release.prerelease }}
-    secrets:
-      deploy-host: ${{ secrets.REPO_HOST }}
-      deploy-user: ${{ secrets.REPO_USER }}
-      deploy-key: ${{ secrets.REPO_KEY }}
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Build Jellyfin plugin package
+        id: jprm
+        uses: oddstr13/jellyfin-plugin-repository-manager@9497a0a499416cc572ed2e07a391d9f943a37b4d
+        with:
+          dotnet-target: net9.0
+
+      - name: Upload package for publishing
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: better-trakt-package
+          if-no-files-found: error
+          path: ${{ steps.jprm.outputs.artifact }}
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: better-trakt-package
+
+      - name: Generate checksums
+        shell: bash
+        run: |
+          shopt -s nullglob
+          packages=(./*.zip)
+          if (( ${#packages[@]} != 1 )); then
+            echo "Expected exactly one plugin ZIP, found ${#packages[@]}" >&2
+            exit 1
+          fi
+          package="${packages[0]}"
+          md5sum "${package#./}" > "${package%.zip}.md5"
+          sha256sum "${package#./}" > "${package%.zip}.sha256"
+
+      - name: Attach package to GitHub release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          fail_on_unmatched_files: true
+          files: |
+            ./*.zip
+            ./*.md5
+            ./*.sha256
+
+  manifest:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish Jellyfin repository manifest
+        uses: Kevinjil/jellyfin-plugin-repo-action@a7832ecc44c6b1a45d531970f6647b8682b005b8
+        with:
+          ignorePrereleases: true
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          pagesBranch: manifest-release
+          pagesFile: manifest.json

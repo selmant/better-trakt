@@ -1,17 +1,21 @@
 ---
-name: "Trakt"
+name: "Better Trakt"
 guid: "4fe3201e-d6ae-4f2e-8917-e12bda571281"
-imageUrl: "https://repo.jellyfin.org/releases/plugin/images/jellyfin-plugin-trakt.png"
-version: 30
+imageUrl: "https://raw.githubusercontent.com/selmant/better-trakt/better-trakt/art/better-trakt.svg"
+version: "1000.2026.731.1"
 targetAbi: "10.11.9.0"
 framework: "net9.0"
-owner: "jellyfin"
-overview: "Record your watched media with Trakt"
+owner: "selmant"
+overview: "Trakt sync with user self-service and Foreseer integration"
 description: >
-  Record your watched media with Trakt.
+  An unofficial, drop-in Trakt plugin fork with per-user self-service and
+  optional, administrator-controlled integration for other applications.
 
 category: "General"
 artifacts:
   - "Trakt.dll"
 changelog: |-
-  -  Fix MissingMethodException on Jellyfin 10.11 (use GetUsers() instead Users) (#292) @lowbit
+  - Introduce the Better Trakt fork and independent update repository.
+  - Add per-user Trakt authorization and preference management.
+  - Add optional, administrator-controlled access-token export.
+  - Include upstream Trakt fixes through jellyfin/jellyfin-plugin-trakt master.

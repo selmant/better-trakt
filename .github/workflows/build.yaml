@@ -1,18 +1,31 @@
-name: '🏗️ Build Plugin'
+name: Build Better Trakt
 
 on:
   push:
     branches:
-      - master
-    paths-ignore:
-      - '**/*.md'
+      - better-trakt
   pull_request:
     branches:
-      - master
-    paths-ignore:
-      - '**/*.md'
+      - better-trakt
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  call:
-    uses: jellyfin/jellyfin-meta-plugins/.github/workflows/build.yaml@bd147a5ba80bc60d6c94f8842afe716f6a2f626a # master
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore
+        run: dotnet restore Trakt.sln
+
+      - name: Build
+        run: dotnet build Trakt.sln --configuration Release --no-restore --warnaserror

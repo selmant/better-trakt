@@ -27,13 +27,13 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     }
 
     /// <inheritdoc />
-    public override string Name => "Trakt";
+    public override string Name => "Better Trakt";
 
     /// <inheritdoc />
     public override Guid Id => new Guid("4fe3201e-d6ae-4f2e-8917-e12bda571281");
 
     /// <inheritdoc />
-    public override string Description => "Sync your library to trakt.tv and scrobble your watch status.";
+    public override string Description => "Sync your Jellyfin library with Trakt, with per-user self-service and optional Foreseer integration.";
 
     /// <summary>
     /// Gets the instance of trakt.tv plugin.

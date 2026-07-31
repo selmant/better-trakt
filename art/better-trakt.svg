@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title description">
+  <title id="title">Better Trakt</title>
+  <description id="description">A coral check mark crossing a violet media frame.</description>
+  <defs>
+    <linearGradient id="frame" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7c3aed"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="check" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fb7185"/>
+      <stop offset="1" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#111827"/>
+  <path d="M128 130h256a38 38 0 0 1 38 38v176a38 38 0 0 1-38 38H128a38 38 0 0 1-38-38V168a38 38 0 0 1 38-38Z" fill="none" stroke="url(#frame)" stroke-width="34"/>
+  <path d="m151 262 68 68 145-166" fill="none" stroke="url(#check)" stroke-linecap="round" stroke-linejoin="round" stroke-width="42"/>
+</svg>
