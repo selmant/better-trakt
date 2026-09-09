@@ -96,11 +96,13 @@ https://raw.githubusercontent.com/selmant/better-trakt/manifest-release/manifest
 
 The fork uses a `1000.x` version namespace, so Jellyfin treats it as newer than the official plugin with the same GUID. Install **Better Trakt** from the catalog and restart Jellyfin. Existing `Trakt.xml` configuration and linked accounts are retained.
 
+Current releases target **Jellyfin 12.0** (`.NET 10`, `targetAbi 12.0.0.0`). Stay on `1000.2026.731.3` if you are still running Jellyfin 10.11.
+
 Future releases are delivered by Jellyfin's normal plugin update task through the same repository. To return to the official plugin, uninstall Better Trakt, restart Jellyfin, and install Trakt from the official catalog. Do not delete `Trakt.xml` during that process.
 
 ## Build
 
-1. To build this plugin you will need [.NET 9.x](https://dotnet.microsoft.com/download/dotnet/9.0).
+1. To build this plugin you will need [.NET 10.x](https://dotnet.microsoft.com/download/dotnet/10.0). With [mise](https://mise.jdx.dev/), run `mise trust && mise install` in the repo root.
 
 2. Build plugin with following command
   ```

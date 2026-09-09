@@ -621,7 +621,7 @@ public class TraktApi
     /// <returns>Task{List{DataContracts.Users.Watched.TraktMovieWatched}}.</returns>
     public async Task<List<DataContracts.Users.Watched.TraktMovieWatched>> SendGetAllWatchedMoviesRequest(TraktUser traktUser)
     {
-        return await GetFromTrakt<List<DataContracts.Users.Watched.TraktMovieWatched>>(TraktUris.WatchedMovies, traktUser).ConfigureAwait(false);
+        return await GetFromTraktWithPaging<DataContracts.Users.Watched.TraktMovieWatched>(TraktUris.WatchedMovies, traktUser).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -631,7 +631,7 @@ public class TraktApi
     /// <returns>Task{List{DataContracts.Users.Watched.TraktShowWatched}}.</returns>
     public async Task<List<DataContracts.Users.Watched.TraktShowWatched>> SendGetWatchedShowsRequest(TraktUser traktUser)
     {
-        return await GetFromTrakt<List<DataContracts.Users.Watched.TraktShowWatched>>(TraktUris.WatchedShows, traktUser).ConfigureAwait(false);
+        return await GetFromTraktWithPaging<DataContracts.Users.Watched.TraktShowWatched>(TraktUris.WatchedShows, traktUser).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -944,7 +944,15 @@ public class TraktApi
             client_secret = TraktUris.ClientSecret
         };
 
-        await PostToTrakt<object>(TraktUris.RevokeToken, deviceRevokeRequest, traktUser).ConfigureAwait(false);
+        try
+        {
+            await PostToTrakt<object>(TraktUris.RevokeToken, deviceRevokeRequest, traktUser).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // Revoking on trakt.tv is best-effort; the caller removes the local user
+            // regardless, and PostToTrakt already logged the underlying failure.
+        }
     }
 
     /// <summary>
@@ -1246,6 +1254,7 @@ public class TraktApi
     private async Task<HttpResponseMessage> RetryHttpRequest(Func<Task<HttpResponseMessage>> function)
     {
         HttpResponseMessage response = null;
+        Exception lastException = null;
         for (int i = 0; i < 3; i++)
         {
             try
@@ -1271,9 +1280,17 @@ public class TraktApi
                     break;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                lastException = ex;
+                response = null;
+                _logger.LogDebug(ex, "Trakt request attempt {Attempt} of 3 failed", i + 1);
             }
+        }
+
+        if (response == null && lastException != null)
+        {
+            throw lastException;
         }
 
         return response;

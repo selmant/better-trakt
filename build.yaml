@@ -2,9 +2,9 @@
 name: "Better Trakt"
 guid: "4fe3201e-d6ae-4f2e-8917-e12bda571281"
 imageUrl: "https://raw.githubusercontent.com/selmant/better-trakt/better-trakt/art/better-trakt.svg"
-version: "1000.2026.731.3"
-targetAbi: "10.11.9.0"
-framework: "net9.0"
+version: "1000.2026.909.1"
+targetAbi: "12.0.0.0"
+framework: "net10.0"
 owner: "selmant"
 overview: "Trakt sync with user self-service and Foreseer integration"
 description: >
@@ -15,9 +15,10 @@ category: "General"
 artifacts:
   - "Trakt.dll"
 changelog: |-
+  - Target Jellyfin 12.0 (.NET 10).
+  - Merge official Trakt v31: paginated watched sync, episode history matching, URL and null-check fixes.
   - Serialize per-user Trakt refreshes to protect rotating refresh tokens.
   - Add the public Trakt client ID to the opt-in token bridge for Foreseer.
   - Introduce the Better Trakt fork and independent update repository.
   - Add per-user Trakt authorization and preference management.
   - Add optional, administrator-controlled access-token export.
-  - Include upstream Trakt fixes through jellyfin/jellyfin-plugin-trakt master.
