@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Mime;
+using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Library;
@@ -343,40 +344,42 @@ public class TraktController : ControllerBase
     /// Get recommended trakt.tv movies.
     /// </summary>
     /// <param name="userGuid">The user's GUID.</param>
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
     /// <response code="200">Recommended movies returned.</response>
     /// <response code="403">Caller is not allowed to manage the specified user.</response>
     /// <returns>A <see cref="List{TraktMovie}"/> with recommended movies.</returns>
     [HttpPost("Users/{userGuid}/RecommendedMovies")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<List<TraktMovie>>> RecommendedTraktMovies([FromRoute] Guid userGuid)
+    public async Task<ActionResult<List<TraktMovie>>> RecommendedTraktMovies([FromRoute] Guid userGuid, CancellationToken cancellationToken)
     {
         if (!AuthorizationHelper.CanAccessUser(User, userGuid))
         {
             return Forbid();
         }
 
-        return await _traktApi.SendMovieRecommendationsRequest(UserHelper.GetTraktUser(userGuid, true)).ConfigureAwait(false);
+        return await _traktApi.SendMovieRecommendationsRequest(UserHelper.GetTraktUser(userGuid, true), cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
     /// Get recommended trakt.tv shows.
     /// </summary>
     /// <param name="userGuid">The user's GUID.</param>
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
     /// <response code="200">Recommended shows returned.</response>
     /// <response code="403">Caller is not allowed to manage the specified user.</response>
     /// <returns>A <see cref="List{TraktShow}"/> with recommended shows.</returns>
     [HttpPost("Users/{userGuid}/RecommendedShows")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult<List<TraktShow>>> RecommendedTraktShows([FromRoute] Guid userGuid)
+    public async Task<ActionResult<List<TraktShow>>> RecommendedTraktShows([FromRoute] Guid userGuid, CancellationToken cancellationToken)
     {
         if (!AuthorizationHelper.CanAccessUser(User, userGuid))
         {
             return Forbid();
         }
 
-        return await _traktApi.SendShowRecommendationsRequest(UserHelper.GetTraktUser(userGuid, true)).ConfigureAwait(false);
+        return await _traktApi.SendShowRecommendationsRequest(UserHelper.GetTraktUser(userGuid, true), cancellationToken).ConfigureAwait(false);
     }
 
     private bool TryGetCallerUserId(out Guid userGuid)
