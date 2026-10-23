@@ -27,6 +27,7 @@ using Trakt.Api.DataContracts.Sync;
 using Trakt.Api.DataContracts.Sync.Collection;
 using Trakt.Api.DataContracts.Sync.Ratings;
 using Trakt.Api.DataContracts.Sync.Watched;
+using Trakt.Helpers;
 using Trakt.Model;
 using Trakt.Model.Enums;
 using TraktEpisodeCollected = Trakt.Api.DataContracts.Sync.Collection.TraktEpisodeCollected;
@@ -1033,10 +1034,7 @@ public class TraktApi
                         var userAccessToken = await JsonSerializer.DeserializeAsync<TraktUserAccessToken>(stream, _jsonOptions).ConfigureAwait(false);
                         if (userAccessToken != null)
                         {
-                            traktUser.AccessToken = userAccessToken.AccessToken;
-                            traktUser.RefreshToken = userAccessToken.RefreshToken;
-                            traktUser.AccessTokenExpiration = DateTime.Now.AddSeconds(userAccessToken.ExpirationWithBuffer);
-                            Plugin.Instance.SaveConfiguration();
+                            SaveAccessToken(traktUser, userAccessToken);
                             return true;
                         }
 
@@ -1101,10 +1099,7 @@ public class TraktApi
 
             if (userAccessToken != null)
             {
-                traktUser.AccessToken = userAccessToken.AccessToken;
-                traktUser.RefreshToken = userAccessToken.RefreshToken;
-                traktUser.AccessTokenExpiration = DateTime.Now.AddSeconds(userAccessToken.ExpirationWithBuffer);
-                Plugin.Instance.SaveConfiguration();
+                SaveAccessToken(traktUser, userAccessToken);
                 _logger.LogInformation("Successfully refreshed the access token for user {UserId}", traktUser.LinkedMbUserId);
             }
         }
@@ -1112,6 +1107,31 @@ public class TraktApi
         {
             refreshLock.Release();
         }
+    }
+
+    /// <summary>
+    /// Stores new tokens on a <see cref="TraktUser"/> and saves the configuration.
+    /// </summary>
+    /// <param name="traktUser">The <see cref="TraktUser"/> the tokens belong to.</param>
+    /// <param name="userAccessToken">The <see cref="TraktUserAccessToken"/>.</param>
+    private static void SaveAccessToken(TraktUser traktUser, TraktUserAccessToken userAccessToken)
+    {
+        var accessTokenExpiration = DateTime.Now.AddSeconds(userAccessToken.ExpirationWithBuffer);
+
+        // Saving the plugin settings replaces every TraktUser object, so traktUser may no longer be
+        // part of the configuration. Update the current one too, or the tokens are lost on save.
+        var currentUser = UserHelper.GetTraktUser(traktUser.LinkedMbUserId);
+        foreach (var user in new[] { traktUser, currentUser })
+        {
+            if (user != null)
+            {
+                user.AccessToken = userAccessToken.AccessToken;
+                user.RefreshToken = userAccessToken.RefreshToken;
+                user.AccessTokenExpiration = accessTokenExpiration;
+            }
+        }
+
+        Plugin.Instance.SaveConfiguration();
     }
 
     private async Task<T> GetFromTrakt<T>(string url, TraktUser traktUser, CancellationToken cancellationToken)
