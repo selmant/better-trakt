@@ -2,7 +2,7 @@
 name: "Better Trakt"
 guid: "4fe3201e-d6ae-4f2e-8917-e12bda571281"
 imageUrl: "https://raw.githubusercontent.com/selmant/better-trakt/better-trakt/art/better-trakt.svg"
-version: "1000.2026.1018.1"
+version: "1000.2026.1023.1"
 targetAbi: "12.1.0.0"
 framework: "net10.0"
 owner: "selmant"
@@ -18,3 +18,17 @@ changelog: |-
   - Target Jellyfin 12.1 (.NET 10).
   - Merge official Trakt v33: paginated collection and playback imports, bounded retries, resilient metadata handling, and fewer Trakt requests (#311) @StefanFriptu, @crobibero.
   - Keep Better Trakt self-service, user authorization checks, and per-user token refresh serialization.
+  - Never unmark episodes watched on Trakt when the watched import is skipped (#326) @zotabee.
+  - Only remove Trakt history when an item is actually marked unwatched (#327) @zotabee.
+  - Clearer watched/unwatched import option labels in the admin and self-service pages (#332) @zotabee.
+  - Keep the access token when a token refresh fails, store new tokens on the current user configuration, and reuse a token another task already refreshed (#331, #330, #334) @zotabee.
+  - Revoke the stored token directly when de-authorizing (#343) @zotabee.
+  - Keep exporting the other users when one user fails, and stop the import cleanly when cancelled (#336, #339) @zotabee.
+  - Tolerate unknown collection metadata values and fix the misspelled laserdisc media type (#337, #324) @zotabee.
+  - Don't send pause updates that Trakt rejects (#333) @zotabee.
+  - Read show-shaped not_found episodes, skip pointless retries without ids, and log the retry's not-found episodes (#335, #340) @zotabee.
+  - Match excluded library folders as whole paths (#329) @zotabee.
+  - Remove a deleted series from the Trakt collection, and send new library items once with refreshed metadata (#338, #341) @zotabee.
+  - Detect Dolby Atmos, DTS:X, DTS-HD and HDR10+, follow Jellyfin's Dolby Vision detection, describe the main audio track, fall back to channel counts and use video height for resolution (#320, #321, #322, #323, #342) @zotabee.
+  - Quietly skip playback events without a library item (#318) @ttybitnik.
+  - Make opt-in extra logging visible at the default log level (#328) @zotabee.

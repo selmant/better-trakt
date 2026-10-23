@@ -121,6 +121,13 @@ The first component remains `1000`. The remaining components identify the year, 
 
 Changes from [`jellyfin/jellyfin-plugin-trakt`](https://github.com/jellyfin/jellyfin-plugin-trakt) are regularly merged into this fork. Bug reports for Better Trakt should be opened here rather than in Jellyfin's official plugin repository.
 
+## Credits
+
+Better Trakt builds on the official [Jellyfin Trakt plugin](https://github.com/jellyfin/jellyfin-plugin-trakt) and its contributors. It also includes fixes proposed upstream but not yet merged there, used with their authors' permission:
+
+- [@zotabee](https://github.com/zotabee): watch-history protection, token handling, multi-user export, library sync, and collection metadata fixes (most of [#320](https://github.com/jellyfin/jellyfin-plugin-trakt/pull/320)–[#343](https://github.com/jellyfin/jellyfin-plugin-trakt/pull/343)).
+- [@ttybitnik](https://github.com/ttybitnik): playback events without a library item ([#318](https://github.com/jellyfin/jellyfin-plugin-trakt/pull/318)).
+
 ## Licence
 
 The source retains the upstream MIT License. See [LICENSE](./LICENSE.md) for more information.
