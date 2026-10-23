@@ -1059,6 +1059,19 @@ public class TraktApi
         await refreshLock.WaitAsync().ConfigureAwait(false);
         try
         {
+            // Another task may already have refreshed the token. Saving the plugin settings replaces every
+            // TraktUser object, so that refresh may only be on the current one: take its tokens while valid.
+            var currentUser = UserHelper.GetTraktUser(traktUser.LinkedMbUserId);
+            if (currentUser != null
+                && !ReferenceEquals(currentUser, traktUser)
+                && !string.IsNullOrWhiteSpace(currentUser.AccessToken)
+                && DateTimeOffset.Now <= currentUser.AccessTokenExpiration)
+            {
+                traktUser.AccessToken = currentUser.AccessToken;
+                traktUser.RefreshToken = currentUser.RefreshToken;
+                traktUser.AccessTokenExpiration = currentUser.AccessTokenExpiration;
+            }
+
             // A caller that waited behind another refresh reuses the rotated token pair.
             if (!string.IsNullOrWhiteSpace(traktUser.AccessToken)
                 && DateTimeOffset.Now <= traktUser.AccessTokenExpiration)
