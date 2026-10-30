@@ -2,7 +2,7 @@
 name: "Better Trakt"
 guid: "4fe3201e-d6ae-4f2e-8917-e12bda571281"
 imageUrl: "https://raw.githubusercontent.com/selmant/better-trakt/better-trakt/art/better-trakt.svg"
-version: "1000.2026.1023.1"
+version: "1000.2026.1030.1"
 targetAbi: "12.1.0.0"
 framework: "net10.0"
 owner: "selmant"
@@ -32,3 +32,4 @@ changelog: |-
   - Detect Dolby Atmos, DTS:X, DTS-HD and HDR10+, follow Jellyfin's Dolby Vision detection, describe the main audio track, fall back to channel counts and use video height for resolution (#320, #321, #322, #323, #342) @zotabee.
   - Quietly skip playback events without a library item (#318) @ttybitnik.
   - Make opt-in extra logging visible at the default log level (#328) @zotabee.
+  - Pause adding to the Trakt collection for a day when Trakt reports the account limit (HTTP 420), with one warning instead of an error on every library change. Scrobbles, watch history and collection removals keep syncing.

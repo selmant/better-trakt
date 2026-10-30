@@ -96,7 +96,7 @@ https://raw.githubusercontent.com/selmant/better-trakt/manifest-release/manifest
 
 The fork uses a `1000.x` version namespace, so Jellyfin treats it as newer than the official plugin with the same GUID. Install **Better Trakt** from the catalog and restart Jellyfin. Existing `Trakt.xml` configuration and linked accounts are retained.
 
-The current branch targets **Jellyfin 12.1** (`.NET 10`, `targetAbi 12.1.0.0`). The latest published release, `1000.2026.909.1`, targets Jellyfin 12.0. Stay on `1000.2026.731.3` if you are still running Jellyfin 10.11.
+The current branch and the latest published release, `1000.2026.1030.1`, target **Jellyfin 12.1** and later (`.NET 10`, `targetAbi 12.1.0.0`). Stay on `1000.2026.909.1` for Jellyfin 12.0, or on `1000.2026.731.3` if you are still running Jellyfin 10.11.
 
 Future releases are delivered by Jellyfin's normal plugin update task through the same repository. To return to the official plugin, uninstall Better Trakt, restart Jellyfin, and install Trakt from the official catalog. Do not delete `Trakt.xml` during that process.
 
