@@ -307,6 +307,10 @@ public class SyncLibraryTask : IScheduledTask
 
                 LogTraktResponseDataContract(dataContracts, TraktItemType.movie);
             }
+            catch (TraktAccountLimitException ex)
+            {
+                _logger.LogInformation("Movies to {State} collection not sent: {Reason}", collectString, ex.Message);
+            }
             catch (ArgumentNullException argNullEx)
             {
                 _logger.LogError(argNullEx, "ArgumentNullException handled sending movies to trakt.tv");
@@ -573,6 +577,10 @@ public class SyncLibraryTask : IScheduledTask
                 progress.Report(currentProgress);
 
                 LogTraktResponseDataContract(dataContracts, TraktItemType.episode);
+            }
+            catch (TraktAccountLimitException ex)
+            {
+                _logger.LogInformation("Episodes to {State} collection not sent: {Reason}", collectString, ex.Message);
             }
             catch (ArgumentNullException argNullEx)
             {

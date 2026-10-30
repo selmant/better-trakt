@@ -52,6 +52,10 @@ public class TraktApi
     private static readonly TimeSpan _tooManyRequestDelay = TimeSpan.FromSeconds(1);
     private static readonly TimeSpan _gatewayDelay = TimeSpan.FromSeconds(30);
 
+    // An account at its trakt.tv limit stays there until the user upgrades or removes items
+    private static readonly TimeSpan _accountLimitPause = TimeSpan.FromHours(24);
+    private static readonly ConcurrentDictionary<Guid, DateTimeOffset> _collectionPausedUntil = new();
+
     private readonly ILogger<TraktApi> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IServerApplicationHost _appHost;
@@ -328,7 +332,7 @@ public class TraktApi
                 Movies = chunk.ToList()
             };
 
-            var response = await PostToTrakt<TraktSyncResponse>(url, data, traktUser, cancellationToken).ConfigureAwait(false);
+            var response = await PostCollectionUpdate(url, data, traktUser, cancellationToken).ConfigureAwait(false);
             responses.Add(response);
         }
 
@@ -467,7 +471,7 @@ public class TraktApi
         };
 
         var url = (eventType == EventType.Add || eventType == EventType.Update) ? TraktUris.SyncCollectionAdd : TraktUris.SyncCollectionRemove;
-        var response = await PostToTrakt<TraktSyncResponse>(url, data, traktUser, cancellationToken).ConfigureAwait(false);
+        var response = await PostCollectionUpdate(url, data, traktUser, cancellationToken).ConfigureAwait(false);
         var responses = new List<TraktSyncResponse> { response };
         if (useProviderIds && response.NotFound.Episodes.Count > 0)
         {
@@ -520,7 +524,7 @@ public class TraktApi
         };
 
         var url = eventType == EventType.Add ? TraktUris.SyncCollectionAdd : TraktUris.SyncCollectionRemove;
-        return await PostToTrakt<TraktSyncResponse>(url, data, traktUser, cancellationToken).ConfigureAwait(false);
+        return await PostCollectionUpdate(url, data, traktUser, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -1403,10 +1407,15 @@ public class TraktApi
                 return default(T);
             }
 
+            if (response.StatusCode == TraktAccountLimitException.AccountLimitExceeded)
+            {
+                throw new TraktAccountLimitException(DescribeAccountLimit(response));
+            }
+
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<T>(_jsonOptions, cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not TraktAccountLimitException)
         {
             _logger.LogError(ex, "Exception handled in PostToTrakt");
             throw;
@@ -1414,6 +1423,67 @@ public class TraktApi
         finally
         {
             _traktResourcePool.Release();
+        }
+    }
+
+    // trakt.tv names the exceeded limit and its upgrade page in response headers
+    private static string DescribeAccountLimit(HttpResponseMessage response)
+    {
+        var description = "trakt.tv account limit reached (HTTP 420)";
+        if (response.Headers.TryGetValues("X-Account-Limit", out var limits))
+        {
+            description += string.Create(CultureInfo.InvariantCulture, $", limit {limits.First()}");
+        }
+
+        if (response.Headers.TryGetValues("X-Upgrade-URL", out var upgradeUrls))
+        {
+            description += string.Create(CultureInfo.InvariantCulture, $", upgrade at {upgradeUrls.First()}");
+        }
+
+        return description;
+    }
+
+    /// <summary>
+    /// Adds items to or removes them from the user's trakt.tv collection.
+    /// After trakt.tv reports the account limit, adds stop for <see cref="_accountLimitPause"/> instead of failing on every
+    /// library change; removals still go through, since they free up room.
+    /// </summary>
+    /// <param name="url">The collection add or remove URL.</param>
+    /// <param name="data">The items.</param>
+    /// <param name="traktUser">The <see cref="TraktUser"/>.</param>
+    /// <param name="cancellationToken">The <see cref="CancellationToken"/>.</param>
+    /// <returns>The trakt.tv response.</returns>
+    /// <exception cref="TraktAccountLimitException">The account is at its limit, or adds are paused because it was.</exception>
+    private async Task<TraktSyncResponse> PostCollectionUpdate(string url, TraktSyncCollected data, TraktUser traktUser, CancellationToken cancellationToken)
+    {
+        var isAdd = url == TraktUris.SyncCollectionAdd;
+        if (isAdd
+            && _collectionPausedUntil.TryGetValue(traktUser.LinkedMbUserId, out var pausedUntil)
+            && pausedUntil > DateTimeOffset.UtcNow)
+        {
+            throw new TraktAccountLimitException(string.Create(CultureInfo.InvariantCulture, $"trakt.tv collection adds are paused until {pausedUntil:u} after the account limit was reached"));
+        }
+
+        try
+        {
+            var response = await PostToTrakt<TraktSyncResponse>(url, data, traktUser, cancellationToken).ConfigureAwait(false);
+            if (isAdd)
+            {
+                _collectionPausedUntil.TryRemove(traktUser.LinkedMbUserId, out _);
+            }
+
+            return response;
+        }
+        catch (TraktAccountLimitException ex) when (isAdd)
+        {
+            var until = DateTimeOffset.UtcNow + _accountLimitPause;
+            _collectionPausedUntil[traktUser.LinkedMbUserId] = until;
+            _logger.LogWarning(
+                "Not adding to the trakt.tv collection of {User} until {Until:u} or a Jellyfin restart ({Reason}). Upgrade the trakt.tv account, remove collected items there, or turn off collection sync; scrobbles and watch history still sync",
+                _userManager.GetUserById(traktUser.LinkedMbUserId)?.Username ?? traktUser.LinkedMbUserId.ToString(),
+                until,
+                ex.Message);
+            throw;
         }
     }
 

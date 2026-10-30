@@ -298,6 +298,12 @@ internal sealed class LibraryManagerEventsHelper : IDisposable
 
                 await _traktApi.SendLibraryUpdateAsync(show, traktUser, eventType, CancellationToken.None).ConfigureAwait(false);
             }
+            catch (TraktAccountLimitException ex)
+            {
+                // TraktApi warned when the limit was reached; every show would be refused the same way
+                _logger.LogDebug("Not sending the remaining shows: {Reason}", ex.Message);
+                return;
+            }
             catch (Exception ex) when (ex is OperationCanceledException or HttpRequestException { StatusCode: null or HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden or HttpStatusCode.Locked or (HttpStatusCode)420 or HttpStatusCode.TooManyRequests or >= HttpStatusCode.BadGateway })
             {
                 // trakt.tv is unreachable, times out, rejects the account or limits it, so the other shows would fail the same way
@@ -377,6 +383,11 @@ internal sealed class LibraryManagerEventsHelper : IDisposable
         {
             await _traktApi.SendLibraryUpdateAsync(movies, traktUser, eventType, CancellationToken.None).ConfigureAwait(false);
         }
+        catch (TraktAccountLimitException ex)
+        {
+            // TraktApi warned when the limit was reached
+            _logger.LogDebug("Not sending queued movies: {Reason}", ex.Message);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Exception handled processing queued movie events");
@@ -440,6 +451,11 @@ internal sealed class LibraryManagerEventsHelper : IDisposable
             {
                 await _traktApi.SendLibraryUpdateAsync(payload, traktUser, eventType, CancellationToken.None).ConfigureAwait(false);
             }
+        }
+        catch (TraktAccountLimitException ex)
+        {
+            // TraktApi warned when the limit was reached
+            _logger.LogDebug("Not sending queued episodes: {Reason}", ex.Message);
         }
         catch (Exception ex)
         {
